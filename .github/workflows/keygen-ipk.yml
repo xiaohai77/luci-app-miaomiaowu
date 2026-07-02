@@ -25,10 +25,6 @@ jobs:
           "$USIGN_BIN" -G -c "miaomiaowu ipk sign key" -s /tmp/mmw-ipk-sign.key -p keys/miaomiaowu-ipk.pub
           cat keys/miaomiaowu-ipk.pub
 
-      - name: 将私钥转换为 Base64 文本
-        run: |
-          base64 -w0 /tmp/mmw-ipk-sign.key > /tmp/mmw-ipk-sign.key.base64
-
       - name: 提交公钥到仓库
         run: |
           git config user.name "github-actions"
@@ -37,9 +33,9 @@ jobs:
           git commit -m "chore: add miaomiaowu ipk sign public key"
           git push
 
-      - name: 上传 Base64 私钥（可直接复制到 GitHub Secrets）
+      - name: 上传私钥（下载后立刻删除这个 artifact）
         uses: actions/upload-artifact@v4
         with:
-          name: mmw-ipk-sign-key-base64
-          path: /tmp/mmw-ipk-sign.key.base64
+          name: mmw-ipk-sign-key-DELETE-AFTER-DOWNLOAD
+          path: /tmp/mmw-ipk-sign.key
           retention-days: 1

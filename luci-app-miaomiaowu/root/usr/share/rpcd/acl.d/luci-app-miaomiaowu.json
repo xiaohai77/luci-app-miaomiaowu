@@ -1,0 +1,20 @@
+{
+	"luci-app-miaomiaowu": {
+		"description": "Grant access to miaomiaowu",
+		"read": {
+			"uci": ["miaomiaowu"],
+			"ubus": {
+				"service": ["list"]
+			}
+		},
+		"write": {
+			"uci": ["miaomiaowu"],
+			"ubus": {
+				"service": ["list"]
+			},
+			"file": {
+				"/etc/init.d/miaomiaowu": ["exec"]
+			}
+		}
+	}
+}

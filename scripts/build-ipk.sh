@@ -37,7 +37,7 @@ Depends: libc
 Source: https://github.com/iluobei/miaomiaowu
 License: MIT
 Installed-Size: $INSTALLED_SIZE
-Description: Clash 配置订阅管理工具（Go 单二进制，含前端）
+Description: Clash 配置订阅管理工具
 EOF
 
 install -m 0755 miaomiaowu/files/postinst "$CTRL/postinst"

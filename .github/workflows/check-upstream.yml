@@ -1,4 +1,4 @@
-name: Check miaomiaowu Upstream
+name: 妙妙屋-自动all
 
 # 每 6 小时检测一次上游 iluobei/miaomiaowu 是否有新 Release。
 # ipk、apk 并发触发打包，互不阻塞——其中一个失败不影响另一个继续跑完；

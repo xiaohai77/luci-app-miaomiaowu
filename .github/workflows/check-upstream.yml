@@ -1,0 +1,147 @@
+name: Check miaomiaowu Upstream
+
+# 每 6 小时检测一次上游 iluobei/miaomiaowu 是否有新 Release。
+# 有更新就依次触发 ipk 打包 -> 等它跑完 -> apk 打包 -> 等它跑完 -> 最后再触发 Cloudflare 部署。
+# deploy.yml 本身不再监听 build 完成事件，只由这里统一调度。
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: '强制触发一次打包，即使版本号没变化'
+        type: boolean
+        required: false
+        default: false
+
+permissions:
+  contents: read
+  actions: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      REPO: ${{ github.repository }}
+    steps:
+      - name: 获取上游最新 Release
+        id: upstream
+        run: |
+          set -e
+          JSON=$(gh api repos/iluobei/miaomiaowu/releases/latest)
+          TAG=$(echo "$JSON" | jq -r '.tag_name')
+          BODY=$(echo "$JSON" | jq -r '.body')
+
+          if [ -z "$TAG" ] || [ "$TAG" == "null" ]; then
+            echo "::error::没拿到上游最新 release，检查网络或上游仓库状态"
+            exit 1
+          fi
+
+          RAW_VERSION="${TAG#v}"
+
+          # ipk、apk 都直接用上游原始版本号，跟上游保持一致。
+          IPK_VERSION="$RAW_VERSION"
+          APK_VERSION="$RAW_VERSION"
+
+          echo "上游最新版本: $TAG"
+          echo "ipk 版本号: $IPK_VERSION"
+          echo "apk 版本号: $APK_VERSION"
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "ipk_version=$IPK_VERSION" >> "$GITHUB_OUTPUT"
+          echo "apk_version=$APK_VERSION" >> "$GITHUB_OUTPUT"
+
+          {
+            echo "body<<MMW_EOF"
+            echo "$BODY"
+            echo "MMW_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 精简更新日志（去掉加群/文档等无关内容）
+        id: changelog
+        run: |
+          # 简单按关键词过滤掉"加群/文档/discord"这类跟版本内容无关的行，
+          # 只是关键词粗筛，不是语义理解，过滤不干净可以自己再调关键词。
+          {
+            echo "clean<<MMW_EOF"
+            echo "${{ steps.upstream.outputs.body }}" | grep -viE '交流群|加群|QQ群|微信群|文档地址|查看文档|使用文档|discussion|discord' || true
+            echo "MMW_EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 检查本仓库是否已经打包过这个版本
+        id: check
+        run: |
+          TAG="${{ steps.upstream.outputs.tag }}"
+          COUNT=$(gh api "repos/${REPO}/releases" --jq "[.[] | select(.tag_name==\"$TAG\")] | length")
+          echo "已存在同名 release 数量: $COUNT"
+          if [ "$COUNT" -gt 0 ] && [ "${{ github.event.inputs.force }}" != "true" ]; then
+            echo "already_built=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_built=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 触发并等待 ipk 打包
+        if: steps.check.outputs.already_built == 'false'
+        run: |
+          BEFORE=$(gh run list --workflow=build-ipk.yml --limit=1 --json databaseId --jq '.[0].databaseId // 0')
+          gh workflow run build-ipk.yml \
+            --repo "$REPO" \
+            -f mmw_ref="${{ steps.upstream.outputs.tag }}" \
+            -f version="${{ steps.upstream.outputs.ipk_version }}" \
+            -f changelog="${{ steps.changelog.outputs.clean }}"
+
+          RUN_ID=""
+          for i in $(seq 1 30); do
+            sleep 5
+            NOW=$(gh run list --workflow=build-ipk.yml --limit=1 --json databaseId --jq '.[0].databaseId // 0')
+            if [ "$NOW" != "0" ] && [ "$NOW" != "$BEFORE" ]; then
+              RUN_ID="$NOW"
+              break
+            fi
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::没找到刚触发的 ipk 打包 run，请去 Actions 页面手动确认"
+            exit 1
+          fi
+
+          echo "ipk 打包 run: $RUN_ID，等待完成..."
+          gh run watch "$RUN_ID" --exit-status
+
+      - name: 触发并等待 apk 打包
+        if: steps.check.outputs.already_built == 'false'
+        run: |
+          BEFORE=$(gh run list --workflow=build-apk.yml --limit=1 --json databaseId --jq '.[0].databaseId // 0')
+          gh workflow run build-apk.yml \
+            --repo "$REPO" \
+            -f mmw_ref="${{ steps.upstream.outputs.tag }}" \
+            -f version="${{ steps.upstream.outputs.apk_version }}" \
+            -f changelog="${{ steps.changelog.outputs.clean }}"
+
+          RUN_ID=""
+          for i in $(seq 1 30); do
+            sleep 5
+            NOW=$(gh run list --workflow=build-apk.yml --limit=1 --json databaseId --jq '.[0].databaseId // 0')
+            if [ "$NOW" != "0" ] && [ "$NOW" != "$BEFORE" ]; then
+              RUN_ID="$NOW"
+              break
+            fi
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::没找到刚触发的 apk 打包 run，请去 Actions 页面手动确认"
+            exit 1
+          fi
+
+          echo "apk 打包 run: $RUN_ID，等待完成..."
+          gh run watch "$RUN_ID" --exit-status
+
+      - name: ipk、apk 都打包完成，触发 Cloudflare 部署
+        if: steps.check.outputs.already_built == 'false'
+        run: |
+          gh workflow run deploy.yml --repo "$REPO"
+
+      - name: 无需更新
+        if: steps.check.outputs.already_built == 'true'
+        run: echo "上游版本 ${{ steps.upstream.outputs.tag }} 已经打包过，跳过。"

@@ -4,8 +4,8 @@
 
 miaomiaowu 本体是一个 Clash 配置订阅管理工具，支持节点管理、生成订阅、导入外部订阅节点、聚合流量、聚合订阅等功能。这个仓库不包含 miaomiaowu 的业务代码，只负责**把上游源码交叉编译成 OpenWrt 路由器能装的软件包，并托管成一个可以 `opkg`/`apk` 直接安装更新的软件源**。
 
-- 软件源地址：`https://miaomiaowu-openwrt.445568.xyz`
-- 上游项目：<https://github.com/iluobei/miaomiaowu>
+- 上游项目：`https://github.com/iluobei/miaomiaowu`
+- 软件源地址：<https://miaomiaowu-openwrt.445568.xyz>
 
 ## 前置要求
 

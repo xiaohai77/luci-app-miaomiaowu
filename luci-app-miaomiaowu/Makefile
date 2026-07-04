@@ -9,6 +9,7 @@ PKG_LICENSE:=MIT
 
 LUCI_TITLE:=LuCI support for miaomiaowu (妙妙屋)
 LUCI_DEPENDS:=+miaomiaowu
+PKG_MAINTAINER:=第十六夜月
 
 # luci.mk 会自动把这个 Makefile 同级目录下的 ./root 和 ./htdocs
 # 原样装进最终 ipk，不用写 Build/Prepare、不用下载、不用写 Package/install。

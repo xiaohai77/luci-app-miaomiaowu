@@ -24,7 +24,8 @@ if command -v opkg >/dev/null 2>&1; then
     sed -i '/^src\/gz miaomiaowu /d' /etc/opkg/customfeeds.conf
     echo "$FEED_LINE" >> /etc/opkg/customfeeds.conf
 
-    opkg update
+    # 同 install.sh：opkg update 会刷新所有已配置源，别的源抖动不该让这里报错
+    opkg update || true
 
     echo "=== 软件源添加完成 ==="
     echo "现在可以执行: opkg install miaomiaowu luci-app-miaomiaowu"
@@ -75,7 +76,8 @@ elif command -v apk >/dev/null 2>&1; then
     mkdir -p /etc/apk/repositories.d
     echo "$REPO_URL/openwrt-apk/$ARCH/packages.adb" > /etc/apk/repositories.d/miaomiaowu.list
 
-    apk update
+    # 同 install.sh：apk update 会刷新所有已配置源，别的源抖动不该让这里报错
+    apk update || true
 
     echo "=== 软件源添加完成 ==="
     echo "现在可以执行: apk add miaomiaowu luci-app-miaomiaowu"

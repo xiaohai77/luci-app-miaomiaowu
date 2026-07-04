@@ -24,7 +24,11 @@ if command -v opkg >/dev/null 2>&1; then
     sed -i '/^src\/gz miaomiaowu /d' /etc/opkg/customfeeds.conf
     echo "$FEED_LINE" >> /etc/opkg/customfeeds.conf
 
-    opkg update
+    # opkg update 会刷新所有已配置的源，只要有一个（哪怕跟本包无关的第三方源）
+    # 超时/中断，opkg update 就会返回非零，配合 set -e 会把整个安装脚本杀掉，
+    # 即使我们自己的源其实拉取成功了。这里放宽为不因此中断，真正是否可用
+    # 交给下面的 opkg install 判断（本包源不可用时它会明确报错）。
+    opkg update || true
     opkg install miaomiaowu luci-app-miaomiaowu
 
 elif command -v apk >/dev/null 2>&1; then
@@ -72,7 +76,13 @@ elif command -v apk >/dev/null 2>&1; then
     mkdir -p /etc/apk/repositories.d
     echo "$REPO_URL/openwrt-apk/$ARCH/packages.adb" > /etc/apk/repositories.d/miaomiaowu.list
 
-    apk update
+    # 同上：apk update 会一起刷新机器上所有已配置的源（比如 istore 之类
+    # 第三方源），只要其中一个超时/传输中断，apk update 就会返回非零，
+    # 配合 set -e 会把整个安装脚本在这里杀掉——哪怕我们自己的 miaomiaowu
+    # 源其实已经拉取成功了（上面已经用 wget 验证过一次这个源真实可用）。
+    # 这里放宽为不因为别的源失败而中断，本包源是否真的可用交给
+    # 下面的 apk add 判断，它会给出明确报错。
+    apk update || true
     apk add miaomiaowu luci-app-miaomiaowu
 
 else

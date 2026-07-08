@@ -146,9 +146,6 @@ jobs:
       - name: 创建 Release
         uses: softprops/action-gh-release@v2
         with:
-          # 之前这里直接用 github.ref_name：手动触发时它是运行所在的分支名（比如 "main"），
-          # 而不是版本号，导致每次都发布/覆盖到同一个叫 "main" 的 release。
-          # 改成用 version job 统一算好的 vX.Y.Z 标签。
           tag_name: ${{ needs.version.outputs.tag }}
           name: ${{ needs.version.outputs.tag }}
           body: ${{ github.event.inputs.changelog }}

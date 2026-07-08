@@ -1,6 +1,4 @@
 #!/bin/sh
-# 妙妙屋 (miaomiaowu) 一键卸载（卸载软件包 + 删除数据目录）
-# 用法: wget -O - https://miaomiaowu-openwrt.445568.xyz/uninstall.sh | ash
 set -e
 
 echo "=== 妙妙屋 (miaomiaowu) 卸载 ==="

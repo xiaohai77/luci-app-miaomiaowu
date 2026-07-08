@@ -2,21 +2,13 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=miaomiaowu
 
-# 版本号不再手写死值，而是编译时直接从你自己发布的 Packages 索引里
-# 动态取最新版本，跟上游走到哪个版本，这里就自动是哪个版本，
-# 不用每次上游更新了还要手动回来改这个文件。
 PKG_VERSION:=$(strip $(shell wget -qO- "https://miaomiaowu-openwrt.445568.xyz/openwrt-ipk/$(ARCH_PACKAGES)/Packages" 2>/dev/null | \
 	awk '/^Package: miaomiaowu$$/{f=1;next} f&&/^Version:/{print $$2;exit} /^$$/{f=0}'))
 ifeq ($(PKG_VERSION),)
-  # 取不到就先给个假值，让编译在这一步就明确报错，而不是继续往下走
-  # 产生一堆下载 404 之类的诡异连锁错误
   PKG_VERSION:=0.0.0-VERSION-FETCH-FAILED
 endif
 PKG_RELEASE:=1
 
-# 上一版这里错把 $(PKGARCH) 当成 opkg 架构字符串用了，这个变量在这个
-# 阶段其实是空的。真正能在 Makefile 顶部就拿到 "aarch64_cortex-a53"
-# 这种 opkg 架构名的变量是 ARCH_PACKAGES。
 PKG_SOURCE_URL:=https://miaomiaowu-openwrt.445568.xyz/openwrt-ipk/$(ARCH_PACKAGES)
 PKG_SOURCE:=$(PKG_NAME)_$(PKG_VERSION)_$(ARCH_PACKAGES).ipk
 PKG_SOURCE_PROTO:=default

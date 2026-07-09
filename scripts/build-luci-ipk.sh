@@ -33,6 +33,15 @@ Installed-Size: $INSTALLED_SIZE
 Description: LuCI support for 妙妙屋 (miaomiaowu)
 EOF
 
+cat > "$CTRL/postinst" <<'PEOF'
+#!/bin/sh
+[ -n "$IPKG_INSTROOT" ] && exit 0
+rm -f /tmp/luci-indexcache
+rm -rf /tmp/luci-modulecache/*
+exit 0
+PEOF
+chmod 0755 "$CTRL/postinst"
+
 tar --numeric-owner --owner=0 --group=0 -C "$CTRL" -czf "$WORK/control.tar.gz" .
 echo "2.0" > "$WORK/debian-binary"
 

@@ -16,7 +16,7 @@ get_arch() {
   rm -rf "$tmp"
 }
 
-LUCI_IPK=$(ls "$SRC_DIR"/luci-app-miaomiaowu_*_all.ipk | head -n1)
+LUCI_IPK=$(ls "$SRC_DIR"/luci-app-miaomiaowu_*_all.ipk 2>/dev/null | head -n1 || true)
 [ -z "$LUCI_IPK" ] && { echo "错误: 没找到 luci-app-miaomiaowu 的 ipk" >&2; exit 1; }
 
 mkdir -p "$SITE_DIR/openwrt-ipk"

@@ -3,6 +3,10 @@ set -e
 
 REPO_URL="https://miaomiaowu-openwrt.445568.xyz"
 
+# 把主逻辑包成函数：既可以被本脚本自己在最下面直接调用（wget | ash 的场景），
+# 也可以被 install.sh 下载后 `. ` source 进去复用，避免两份脚本各写一套架构探测逻辑。
+mmw_setup_feed() {
+
 echo "=== 妙妙屋 (miaomiaowu) 添加软件源 ==="
 
 if command -v opkg >/dev/null 2>&1; then
@@ -70,4 +74,12 @@ elif command -v apk >/dev/null 2>&1; then
 else
     echo "错误: 未检测到 opkg 或 apk" >&2
     exit 1
+fi
+
+}
+
+# 只有被 install.sh source 进去时才会设置 MMW_SOURCED=1，此时只定义函数、不自动执行，
+# 交给 install.sh 自己决定什么时候调用 mmw_setup_feed。
+if [ "${MMW_SOURCED:-0}" != "1" ]; then
+    mmw_setup_feed
 fi

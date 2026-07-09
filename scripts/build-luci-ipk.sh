@@ -38,6 +38,7 @@ cat > "$CTRL/postinst" <<'PEOF'
 [ -n "$IPKG_INSTROOT" ] && exit 0
 rm -f /tmp/luci-indexcache
 rm -rf /tmp/luci-modulecache/*
+killall -HUP rpcd 2>/dev/null
 exit 0
 PEOF
 chmod 0755 "$CTRL/postinst"

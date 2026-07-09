@@ -27,6 +27,7 @@ cat > "$SCRIPTS/post-install" <<'EOF'
 #!/bin/sh
 rm -f /tmp/luci-indexcache
 rm -rf /tmp/luci-modulecache/*
+killall -HUP rpcd 2>/dev/null
 exit 0
 EOF
 chmod 0755 "$SCRIPTS/post-install"

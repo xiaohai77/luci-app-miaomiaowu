@@ -20,7 +20,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          TAG=$(gh api repos/${{ github.repository }}/releases --jq '[.[] | select(.tag_name | endswith("-apk") | not)] | sort_by(.created_at) | last | .tag_name')
+          TAG=$(gh api repos/${{ github.repository }}/releases --jq '[.[] | select(.tag_name | endswith("-ipk"))] | sort_by(.created_at) | last | .tag_name')
           echo "IPK_TAG=$TAG" >> $GITHUB_ENV
           echo "Latest IPK tag: $TAG"
 

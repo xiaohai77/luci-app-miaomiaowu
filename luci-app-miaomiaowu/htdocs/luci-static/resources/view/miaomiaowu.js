@@ -57,7 +57,7 @@ return view.extend({
 		o.inputtitle = _('打开面板');
 		o.disabled = !running;
 		o.onclick = function () {
-			var port = uci.get('miaomiaowu', 'miaomiaowu', 'port') || '8080';
+			var port = uci.get('miaomiaowu', 'miaomiaowu', 'port') || '7852';
 			window.open('http://' + window.location.hostname + ':' + port + '/', '_blank');
 		};
 

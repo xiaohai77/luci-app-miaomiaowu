@@ -19,18 +19,18 @@ get_arch() {
 LUCI_IPK=$(ls "$SRC_DIR"/luci-app-miaomiaowu_*_all.ipk 2>/dev/null | head -n1 || true)
 [ -z "$LUCI_IPK" ] && { echo "错误: 没找到 luci-app-miaomiaowu 的 ipk" >&2; exit 1; }
 
-mkdir -p "$SITE_DIR/openwrt-ipk"
+mkdir -p "$SITE_DIR/openwrt-24.10"
 
 for BIN_IPK in "$SRC_DIR"/miaomiaowu_*.ipk; do
   ARCH=$(get_arch "$BIN_IPK")
   [ -z "$ARCH" ] && { echo "警告: 无法识别 $BIN_IPK 的架构，跳过" >&2; continue; }
-  REPO_DIR="$SITE_DIR/openwrt-ipk/$ARCH"
+  REPO_DIR="$SITE_DIR/openwrt-24.10/$ARCH"
   mkdir -p "$REPO_DIR"
   cp "$BIN_IPK" "$REPO_DIR/"
   cp "$LUCI_IPK" "$REPO_DIR/"
 done
 
-for REPO_DIR in "$SITE_DIR"/openwrt-ipk/*/; do
+for REPO_DIR in "$SITE_DIR"/openwrt-24.10/*/; do
   (cd "$REPO_DIR" && "$IPKG_MAKE_INDEX" . > Packages)
   gzip -kf "$REPO_DIR/Packages"
   "$USIGN_BIN" -S -m "$REPO_DIR/Packages" -s "$SIGN_KEY" -x "$REPO_DIR/Packages.sig"
